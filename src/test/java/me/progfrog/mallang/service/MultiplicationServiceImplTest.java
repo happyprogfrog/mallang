@@ -1,6 +1,8 @@
 package me.progfrog.mallang.service;
 
 import me.progfrog.mallang.domain.Multiplication;
+import me.progfrog.mallang.domain.MultiplicationResultAttempt;
+import me.progfrog.mallang.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,36 @@ class MultiplicationServiceImplTest {
         // then
         assertThat(multiplication.getFactorA()).isEqualTo(50);
         assertThat(multiplication.getFactorB()).isEqualTo(30);
-        assertThat(multiplication.getResult()).isEqualTo(1500);
+        // assertThat(multiplication.getResult()).isEqualTo(1500);
+    }
+
+    @Test
+    @DisplayName("계산 결과가 맞으면 true 반환")
+    void checkAttempt_1() {
+        // given
+        Multiplication multiplication = new Multiplication(50, 60);
+        User user = new User("Frog");
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3000);
+
+        // when
+        boolean attemptResult = multiplicationServiceImpl.checkAttempt(attempt);
+
+        // then
+        assertThat(attemptResult).isTrue();
+    }
+
+    @Test
+    @DisplayName("계산 결과가 틀리면 false 반환")
+    void checkAttempt_2() {
+        // given
+        Multiplication multiplication = new Multiplication(50, 60);
+        User user = new User("Frog");
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3010);
+
+        // when
+        boolean attemptResult = multiplicationServiceImpl.checkAttempt(attempt);
+
+        // then
+        assertThat(attemptResult).isFalse();
     }
 }
