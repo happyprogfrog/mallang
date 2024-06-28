@@ -1,25 +1,18 @@
 package me.progfrog.mallang.domain;
 
-import lombok.Getter;
+import lombok.*;
 
+/**
+ * 애플리케이션에서 곱셈을 나타내는 클래스(a * b)
+ */
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 @Getter
-public class Multiplication {
+@ToString
+@EqualsAndHashCode
+public final class Multiplication {
 
     // 인수
-    private int factorA;
-    private int factorB;
-
-    // A * B의 결과
-    private int result;
-
-    public Multiplication(int factorA, int factorB) {
-        this.factorA = factorA;
-        this.factorB = factorB;
-        this.result = factorA * factorB;
-    }
-
-    @Override
-    public String toString() {
-        return "Multiplication{factorA=%d, factorB=%d, result(A*B)=%d}".formatted(factorA, factorB, result);
-    }
+    private final int factorA;
+    private final int factorB;
 }
