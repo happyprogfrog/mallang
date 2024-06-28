@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.progfrog.mallang.domain.Multiplication;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 @RequiredArgsConstructor
 @Service
@@ -19,8 +20,13 @@ public class MultiplicationServiceImpl implements MultiplicationService {
     }
 
     @Override
-    public boolean checkAttempt(MultiplicationResultAttempt resultAttempt) {
-        return resultAttempt.getResultAttempt()
-                == resultAttempt.getMultiplication().getFactorA() * resultAttempt.getMultiplication().getFactorB();
+    public boolean checkAttempt(final MultiplicationResultAttempt attempt) {
+        boolean correct = attempt.getResultAttempt()
+                == attempt.getMultiplication().getFactorA() * attempt.getMultiplication().getFactorB();
+
+        // 조작된 답안을 방지
+        Assert.isTrue(!attempt.isCorrect(), "채점된 상태로 보낼 수 없습니다!");
+
+        return correct;
     }
 }

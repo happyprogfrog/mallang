@@ -17,12 +17,14 @@ final class MultiplicationResultAttemptController {
     private final MultiplicationService multiplicationService;
 
     @PostMapping
-    ResponseEntity<ResultResponse> postResult(@RequestBody MultiplicationResultAttempt attempt) {
-        return ResponseEntity.ok(new ResultResponse(multiplicationService.checkAttempt(attempt)));
-    }
-
-    record ResultResponse(
-            boolean correct
-    ) {
+    ResponseEntity<MultiplicationResultAttempt> postResult(@RequestBody MultiplicationResultAttempt attempt) {
+        boolean correct = multiplicationService.checkAttempt(attempt);
+        MultiplicationResultAttempt attemptCopy = new MultiplicationResultAttempt(
+                attempt.getUser(),
+                attempt.getMultiplication(),
+                attempt.getResultAttempt(),
+                correct
+        );
+        return ResponseEntity.ok(attemptCopy);
     }
 }
