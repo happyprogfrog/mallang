@@ -1,7 +1,11 @@
 package me.progfrog.mallang.controller;
 
 import lombok.RequiredArgsConstructor;
+import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.service.MultiplicationService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -12,7 +16,10 @@ final class MultiplicationResultAttemptController {
 
     private final MultiplicationService multiplicationService;
 
-    // TODO: 나중에 여기에 POST 구현체 추가
+    @PostMapping
+    ResponseEntity<ResultResponse> postResult(@RequestBody MultiplicationResultAttempt attempt) {
+        return ResponseEntity.ok(new ResultResponse(multiplicationService.checkAttempt(attempt)));
+    }
 
     record ResultResponse(
             boolean correct
