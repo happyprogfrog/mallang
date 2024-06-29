@@ -4,10 +4,9 @@ import lombok.RequiredArgsConstructor;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.service.MultiplicationService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -26,5 +25,10 @@ final class MultiplicationResultAttemptController {
                 correct
         );
         return ResponseEntity.ok(attemptCopy);
+    }
+
+    @GetMapping
+    ResponseEntity<List<MultiplicationResultAttempt>> getStatistics(@RequestParam("alias") String alias) {
+        return ResponseEntity.ok(multiplicationService.getStatsForUser(alias));
     }
 }

@@ -6,6 +6,7 @@ import me.progfrog.mallang.domain.User;
 import me.progfrog.mallang.repository.MultiplicationRepository;
 import me.progfrog.mallang.repository.MultiplicationResultAttemptRepository;
 import me.progfrog.mallang.repository.UserRepository;
+import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,13 +47,11 @@ class MultiplicationServiceImplTest {
     private final int factorB = 60;
     private User user;
     private Multiplication multiplication;
-    private MultiplicationResultAttempt attempt;
 
     @BeforeEach
     void setUp() {
         user = new User("Frog");
         multiplication = new Multiplication(factorA, factorB);
-        attempt = new MultiplicationResultAttempt(user, multiplication, 3000, false);
     }
 
     @Test
@@ -75,7 +75,6 @@ class MultiplicationServiceImplTest {
         // given
         given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
         given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
-        given(attemptRepository.findByUserIdAndMultiplicationId(user.getId(), multiplication.getId())).willReturn(Optional.empty());
 
         MultiplicationResultAttempt correctAttempt = new MultiplicationResultAttempt(user, multiplication, factorA * factorB, false);
 
@@ -93,7 +92,6 @@ class MultiplicationServiceImplTest {
         // given
         given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
         given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
-        given(attemptRepository.findByUserIdAndMultiplicationId(user.getId(), multiplication.getId())).willReturn(Optional.empty());
 
         MultiplicationResultAttempt wrongAttempt = new MultiplicationResultAttempt(user, multiplication, 3010, false);
 
@@ -109,7 +107,7 @@ class MultiplicationServiceImplTest {
     @DisplayName("이미 채점된 상태로 답안을 보낼 때 예외 발생")
     public void checkAttempt_3() {
         // given
-        attempt = new MultiplicationResultAttempt(user, multiplication, 3010, true);
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3010, true);
 
         // then
         assertThrows(IllegalArgumentException.class, () -> {
@@ -118,16 +116,20 @@ class MultiplicationServiceImplTest {
     }
 
     @Test
-    @DisplayName("이전에 답안을 제출한 이력이 있으면 예외가 발생")
-    public void checkAttempt_4() {
+    @DisplayName("사용자의 최근 답안을 보여주기")
+    public void retrieveStatsTest() {
         // given
-        given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
-        given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
-        given(attemptRepository.findByUserIdAndMultiplicationId(user.getId(), multiplication.getId())).willReturn(Optional.of(attempt));
+        MultiplicationResultAttempt attempt1 = new MultiplicationResultAttempt(user, multiplication, 3010, false);
+        MultiplicationResultAttempt attempt2 = new MultiplicationResultAttempt(user, multiplication, 3051, false);
+        List<MultiplicationResultAttempt> latestAttempts = Lists.newArrayList(attempt1, attempt2);
 
-        // when, then
-        assertThatThrownBy(() -> multiplicationServiceImpl.checkAttempt(attempt))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("이미 제출된 이력이 있는 답안 입니다!");
+        doReturn(latestAttempts).when(attemptRepository).findTop5ByUserAliasOrderByIdDesc(user.getAlias());
+
+        // when
+        List<MultiplicationResultAttempt> latestAttemptsResult = multiplicationServiceImpl.getStatsForUser(user.getAlias());
+
+        // then
+        assertThat(latestAttemptsResult).isEqualTo(latestAttempts);
     }
+
 }

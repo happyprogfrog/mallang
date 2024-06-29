@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -42,9 +43,6 @@ public class MultiplicationServiceImpl implements MultiplicationService {
         Multiplication multiplication = findOrCreateMultiplication(
                 attempt.getMultiplication().getFactorA(), attempt.getMultiplication().getFactorB());
 
-        // 이미 답안을 보낸 적이 있는 지 확인
-        checkAlreadyAttempt(user.orElse(attempt.getUser()).getId(), multiplication.getId());
-
         // 답안을 채점
         boolean correct = attempt.getResultAttempt()
                 == multiplication.getFactorA() * multiplication.getFactorB();
@@ -62,11 +60,10 @@ public class MultiplicationServiceImpl implements MultiplicationService {
         return correct;
     }
 
-    private void checkAlreadyAttempt(Long userId, Long multiplicationId) {
-        Optional<MultiplicationResultAttempt> resultAttempt = attemptRepository.findByUserIdAndMultiplicationId(userId, multiplicationId);
-        if (resultAttempt.isPresent()) {
-            throw new RuntimeException("이미 제출된 이력이 있는 답안 입니다!");
-        }
+    @Transactional(readOnly = true)
+    @Override
+    public List<MultiplicationResultAttempt> getStatsForUser(String userAlias) {
+        return attemptRepository.findTop5ByUserAliasOrderByIdDesc(userAlias);
     }
 
     private Multiplication findOrCreateMultiplication(int factorA, int factorB) {

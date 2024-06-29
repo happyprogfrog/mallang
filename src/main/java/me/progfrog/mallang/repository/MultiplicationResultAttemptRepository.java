@@ -12,9 +12,7 @@ import java.util.Optional;
 public interface MultiplicationResultAttemptRepository extends CrudRepository<MultiplicationResultAttempt, Long> {
 
     /**
-     * @return 닉네임에해당하는 사용자의 최근 답안 5개
+     * @return 닉네임에 해당하는 사용자의 최근 답안 5개
      */
     List<MultiplicationResultAttempt> findTop5ByUserAliasOrderByIdDesc(String userAlias);
-
-    Optional<MultiplicationResultAttempt> findByUserIdAndMultiplicationId(Long userId, Long multiplicationId);
 }
