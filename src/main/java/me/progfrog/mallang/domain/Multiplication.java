@@ -1,5 +1,6 @@
 package me.progfrog.mallang.domain;
 
+import jakarta.persistence.*;
 import lombok.*;
 
 /**
@@ -10,9 +11,21 @@ import lombok.*;
 @Getter
 @ToString
 @EqualsAndHashCode
+@Entity
+@Table(name = "multiplication", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"factorA", "factorB"})
+})
 public final class Multiplication {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "multiplication_id")
+    private Long id;
+
     // 인수
+    @Column(nullable = false)
     private final int factorA;
+
+    @Column(nullable = false)
     private final int factorB;
 }

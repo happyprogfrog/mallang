@@ -3,6 +3,11 @@ package me.progfrog.mallang.service;
 import me.progfrog.mallang.domain.Multiplication;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.domain.User;
+import me.progfrog.mallang.repository.MultiplicationRepository;
+import me.progfrog.mallang.repository.MultiplicationResultAttemptRepository;
+import me.progfrog.mallang.repository.UserRepository;
+import org.assertj.core.util.Lists;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +15,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class MultiplicationServiceImplTest {
@@ -19,8 +31,28 @@ class MultiplicationServiceImplTest {
     @Mock
     private RandomGeneratorService randomGeneratorService;
 
+    @Mock
+    private MultiplicationResultAttemptRepository attemptRepository;
+
+    @Mock
+    private MultiplicationRepository multiplicationRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private MultiplicationServiceImpl multiplicationServiceImpl;
+
+    private final int factorA = 50;
+    private final int factorB = 60;
+    private User user;
+    private Multiplication multiplication;
+
+    @BeforeEach
+    void setUp() {
+        user = new User("Frog");
+        multiplication = new Multiplication(factorA, factorB);
+    }
 
     @Test
     @DisplayName("랜덤한 인수에 대한 계산 결과가 잘 나오는 지 확인")
@@ -41,29 +73,63 @@ class MultiplicationServiceImplTest {
     @DisplayName("계산 결과가 맞으면 true 반환")
     void checkAttempt_1() {
         // given
-        Multiplication multiplication = new Multiplication(50, 60);
-        User user = new User("Frog");
-        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3000);
+        given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
+        given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
+
+        MultiplicationResultAttempt correctAttempt = new MultiplicationResultAttempt(user, multiplication, factorA * factorB, false);
 
         // when
-        boolean attemptResult = multiplicationServiceImpl.checkAttempt(attempt);
+        boolean result = multiplicationServiceImpl.checkAttempt(correctAttempt);
 
         // then
-        assertThat(attemptResult).isTrue();
+        assertThat(result).isTrue();
+        verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
     }
 
     @Test
     @DisplayName("계산 결과가 틀리면 false 반환")
     void checkAttempt_2() {
         // given
-        Multiplication multiplication = new Multiplication(50, 60);
-        User user = new User("Frog");
-        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3010);
+        given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
+        given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
+
+        MultiplicationResultAttempt wrongAttempt = new MultiplicationResultAttempt(user, multiplication, 3010, false);
 
         // when
-        boolean attemptResult = multiplicationServiceImpl.checkAttempt(attempt);
+        boolean result = multiplicationServiceImpl.checkAttempt(wrongAttempt);
 
         // then
-        assertThat(attemptResult).isFalse();
+        assertThat(result).isFalse();
+        verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
     }
+
+    @Test
+    @DisplayName("이미 채점된 상태로 답안을 보낼 때 예외 발생")
+    public void checkAttempt_3() {
+        // given
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3010, true);
+
+        // then
+        assertThrows(IllegalArgumentException.class, () -> {
+            multiplicationServiceImpl.checkAttempt(attempt);
+        }, "채점된 상태로 보낼 수 없습니다!");
+    }
+
+    @Test
+    @DisplayName("사용자의 최근 답안을 보여주기")
+    public void retrieveStatsTest() {
+        // given
+        MultiplicationResultAttempt attempt1 = new MultiplicationResultAttempt(user, multiplication, 3010, false);
+        MultiplicationResultAttempt attempt2 = new MultiplicationResultAttempt(user, multiplication, 3051, false);
+        List<MultiplicationResultAttempt> latestAttempts = Lists.newArrayList(attempt1, attempt2);
+
+        doReturn(latestAttempts).when(attemptRepository).findTop5ByUserAliasOrderByIdDesc(user.getAlias());
+
+        // when
+        List<MultiplicationResultAttempt> latestAttemptsResult = multiplicationServiceImpl.getStatsForUser(user.getAlias());
+
+        // then
+        assertThat(latestAttemptsResult).isEqualTo(latestAttempts);
+    }
+
 }

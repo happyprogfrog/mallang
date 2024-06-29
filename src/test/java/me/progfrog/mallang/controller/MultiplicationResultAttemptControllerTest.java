@@ -1,11 +1,11 @@
 package me.progfrog.mallang.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.progfrog.mallang.controller.MultiplicationResultAttemptController.ResultResponse;
 import me.progfrog.mallang.domain.Multiplication;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.domain.User;
 import me.progfrog.mallang.service.MultiplicationService;
+import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,9 +20,12 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 @ExtendWith(SpringExtension.class)
@@ -37,7 +40,8 @@ class MultiplicationResultAttemptControllerTest {
 
     // 이 객체는 initFields() 메서드를 이용해 자동으로 초기화
     private JacksonTester<MultiplicationResultAttempt> jsonResult;
-    private JacksonTester<ResultResponse> jsonResponse;
+    private JacksonTester<MultiplicationResultAttempt> jsonResponse;
+    private JacksonTester<List<MultiplicationResultAttempt>> jsonResultAttemptList;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +68,7 @@ class MultiplicationResultAttemptControllerTest {
 
         User user = new User("Frog");
         Multiplication multiplication = new Multiplication(50, 70);
-        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3500);
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3500, correct);
 
         // when
         MockHttpServletResponse response = mvc.perform(post("/results")
@@ -74,6 +78,33 @@ class MultiplicationResultAttemptControllerTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(response.getContentAsString()).isEqualTo(jsonResponse.write(new ResultResponse(correct)).getJson());
+        assertThat(response.getContentAsString()).isEqualTo(jsonResponse.write(
+                new MultiplicationResultAttempt(
+                        attempt.getUser(),
+                        attempt.getMultiplication(),
+                        attempt.getResultAttempt(),
+                        correct)
+                ).getJson());
+    }
+
+    @Test
+    @DisplayName("사용자의 통계 정보를 조회")
+    public void getUserStats() throws Exception {
+        // given
+        User user = new User("Frog");
+        Multiplication multiplication = new Multiplication(50, 70);
+
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3500, true);
+        List<MultiplicationResultAttempt> recentAttempts = Lists.newArrayList(attempt, attempt);
+        given(multiplicationService.getStatsForUser("Frog")).willReturn(recentAttempts);
+
+        // when
+        MockHttpServletResponse response = mvc.perform(get("/results")
+                .param("alias", "Frog"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(jsonResultAttemptList.write(recentAttempts).getJson());
     }
 }
