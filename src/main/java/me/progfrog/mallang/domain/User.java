@@ -1,5 +1,6 @@
 package me.progfrog.mallang.domain;
 
+import jakarta.persistence.*;
 import lombok.*;
 
 /**
@@ -10,7 +11,15 @@ import lombok.*;
 @Getter
 @ToString
 @EqualsAndHashCode
+@Entity
+@Table(name = "users")
 public final class User {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    private Long id;
+
+    @Column(nullable = false)
     private final String alias;
 }
