@@ -3,6 +3,8 @@ package me.progfrog.mallang.service;
 import me.progfrog.mallang.domain.Multiplication;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.domain.User;
+import me.progfrog.mallang.event.EventDispatcher;
+import me.progfrog.mallang.event.MultiplicationSolvedEvent;
 import me.progfrog.mallang.repository.MultiplicationRepository;
 import me.progfrog.mallang.repository.MultiplicationResultAttemptRepository;
 import me.progfrog.mallang.repository.UserRepository;
@@ -40,6 +42,9 @@ class MultiplicationServiceImplTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private EventDispatcher eventDispatcher;
+
     @InjectMocks
     private MultiplicationServiceImpl multiplicationServiceImpl;
 
@@ -76,7 +81,9 @@ class MultiplicationServiceImplTest {
         given(userRepository.findByAlias(anyString())).willReturn(Optional.of(user));
         given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
 
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3000, false);
         MultiplicationResultAttempt correctAttempt = new MultiplicationResultAttempt(user, multiplication, factorA * factorB, false);
+        MultiplicationSolvedEvent event = new MultiplicationSolvedEvent(attempt.getId(), attempt.getUser().getId(), true);
 
         // when
         boolean result = multiplicationServiceImpl.checkAttempt(correctAttempt);
@@ -84,6 +91,7 @@ class MultiplicationServiceImplTest {
         // then
         assertThat(result).isTrue();
         verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
+        verify(eventDispatcher).send(eq(event));
     }
 
     @Test
@@ -94,6 +102,7 @@ class MultiplicationServiceImplTest {
         given(multiplicationRepository.findByFactorAAndFactorB(anyInt(), anyInt())).willReturn(Optional.of(multiplication));
 
         MultiplicationResultAttempt wrongAttempt = new MultiplicationResultAttempt(user, multiplication, 3010, false);
+        MultiplicationSolvedEvent event = new MultiplicationSolvedEvent(wrongAttempt.getId(), wrongAttempt.getUser().getId(), false);
 
         // when
         boolean result = multiplicationServiceImpl.checkAttempt(wrongAttempt);
@@ -101,6 +110,7 @@ class MultiplicationServiceImplTest {
         // then
         assertThat(result).isFalse();
         verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
+        verify(eventDispatcher).send(eq(event));
     }
 
     @Test

@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import me.progfrog.mallang.domain.Multiplication;
 import me.progfrog.mallang.domain.MultiplicationResultAttempt;
 import me.progfrog.mallang.domain.User;
+import me.progfrog.mallang.event.EventDispatcher;
+import me.progfrog.mallang.event.MultiplicationSolvedEvent;
 import me.progfrog.mallang.repository.MultiplicationRepository;
 import me.progfrog.mallang.repository.MultiplicationResultAttemptRepository;
 import me.progfrog.mallang.repository.UserRepository;
@@ -22,6 +24,7 @@ public class MultiplicationServiceImpl implements MultiplicationService {
     private final MultiplicationRepository multiplicationRepository;
     private final MultiplicationResultAttemptRepository attemptRepository;
     private final UserRepository userRepository;
+    private final EventDispatcher eventDispatcher;
 
     @Override
     public Multiplication createRandomMultiplication() {
@@ -56,6 +59,13 @@ public class MultiplicationServiceImpl implements MultiplicationService {
 
         // 답안을 저장
         attemptRepository.save(checkedAttempt);
+
+        // 이벤트로 결과를 전송
+        eventDispatcher.send(new MultiplicationSolvedEvent(
+                checkedAttempt.getId(),
+                checkedAttempt.getUser().getId(),
+                checkedAttempt.isCorrect()
+        ));
 
         return correct;
     }
