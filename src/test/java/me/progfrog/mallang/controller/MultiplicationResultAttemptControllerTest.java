@@ -39,8 +39,7 @@ class MultiplicationResultAttemptControllerTest {
     private MockMvc mvc;
 
     // 이 객체는 initFields() 메서드를 이용해 자동으로 초기화
-    private JacksonTester<MultiplicationResultAttempt> jsonResult;
-    private JacksonTester<MultiplicationResultAttempt> jsonResponse;
+    private JacksonTester<MultiplicationResultAttempt> jsonResultAttempt;
     private JacksonTester<List<MultiplicationResultAttempt>> jsonResultAttemptList;
 
     @BeforeEach
@@ -73,12 +72,12 @@ class MultiplicationResultAttemptControllerTest {
         // when
         MockHttpServletResponse response = mvc.perform(post("/results")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(jsonResult.write(attempt).getJson()))
+                .content(jsonResultAttempt.write(attempt).getJson()))
                 .andReturn().getResponse();
 
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
-        assertThat(response.getContentAsString()).isEqualTo(jsonResponse.write(
+        assertThat(response.getContentAsString()).isEqualTo(jsonResultAttempt.write(
                 new MultiplicationResultAttempt(
                         attempt.getUser(),
                         attempt.getMultiplication(),
@@ -106,5 +105,24 @@ class MultiplicationResultAttemptControllerTest {
         // then
         assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
         assertThat(response.getContentAsString()).isEqualTo(jsonResultAttemptList.write(recentAttempts).getJson());
+    }
+
+    @Test
+    @DisplayName("Id로 답안 조회하기")
+    void getResultById() throws Exception {
+        // given
+        User user = new User("Frog");
+        Multiplication multiplication = new Multiplication(50, 70);
+        MultiplicationResultAttempt attempt = new MultiplicationResultAttempt(user, multiplication, 3500, true);
+        given(multiplicationService.getResultById(4L)).willReturn(attempt);
+
+        // when
+        MockHttpServletResponse response = mvc.perform(
+                get("/results/4"))
+                .andReturn().getResponse();
+
+        // then
+        assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
+        assertThat(response.getContentAsString()).isEqualTo(jsonResultAttempt.write(attempt).getJson());
     }
 }
