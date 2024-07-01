@@ -76,6 +76,12 @@ public class MultiplicationServiceImpl implements MultiplicationService {
         return attemptRepository.findTop5ByUserAliasOrderByIdDesc(userAlias);
     }
 
+    @Override
+    public MultiplicationResultAttempt getResultById(Long resultId) {
+        return attemptRepository.findById(resultId).orElseThrow(() -> new IllegalArgumentException(
+                "요청한 resultId[%d]는 존재하지 않습니다.".formatted(resultId)));
+    }
+
     private Multiplication findOrCreateMultiplication(int factorA, int factorB) {
         Optional<Multiplication> multiplication = multiplicationRepository.findByFactorAAndFactorB(factorA, factorB);
         return multiplication.orElseGet(() -> multiplicationRepository.save(new Multiplication(factorA, factorB)));
