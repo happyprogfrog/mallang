@@ -1,3 +1,4 @@
 rootProject.name = 'mallang'
 include 'social-multiplication'
+include 'gamification'
 
