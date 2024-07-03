@@ -1,1 +1,3 @@
 rootProject.name = 'mallang'
+include 'social-multiplication'
+
