@@ -86,10 +86,10 @@ class MultiplicationServiceImplTest {
         MultiplicationSolvedEvent event = new MultiplicationSolvedEvent(attempt.getId(), attempt.getUser().getId(), true);
 
         // when
-        boolean result = multiplicationServiceImpl.checkAttempt(correctAttempt);
+        MultiplicationResultAttempt resultAttempt = multiplicationServiceImpl.checkAttempt(correctAttempt);
 
         // then
-        assertThat(result).isTrue();
+        assertThat(resultAttempt.isCorrect()).isTrue();
         verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
         verify(eventDispatcher).send(eq(event));
     }
@@ -105,10 +105,10 @@ class MultiplicationServiceImplTest {
         MultiplicationSolvedEvent event = new MultiplicationSolvedEvent(wrongAttempt.getId(), wrongAttempt.getUser().getId(), false);
 
         // when
-        boolean result = multiplicationServiceImpl.checkAttempt(wrongAttempt);
+        MultiplicationResultAttempt resultAttempt = multiplicationServiceImpl.checkAttempt(wrongAttempt);
 
         // then
-        assertThat(result).isFalse();
+        assertThat(resultAttempt.isCorrect()).isFalse();
         verify(attemptRepository).save(any(MultiplicationResultAttempt.class));
         verify(eventDispatcher).send(eq(event));
     }

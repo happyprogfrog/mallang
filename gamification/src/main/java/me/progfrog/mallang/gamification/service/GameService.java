@@ -1,6 +1,7 @@
 package me.progfrog.mallang.gamification.service;
 
 import me.progfrog.mallang.gamification.domain.GameStats;
+import me.progfrog.mallang.gamification.domain.ScoreCard;
 
 /**
  * 게임화 시스템의 주요 로직을 다루는 서비스
@@ -21,4 +22,12 @@ public interface GameService {
      * @return 사용자의 통계 정보
      */
     GameStats retrieveStatsForUser(Long userId);
+
+    /**
+     * 주어진 답안의 점수를 조회
+     *
+     * @param attemptId 답안 ID
+     * @return 해당 답안의 점수에 대한 세부 정보를 담은 {@link ScoreCard}
+     */
+    ScoreCard getScoreForAttempt(Long attemptId);
 }

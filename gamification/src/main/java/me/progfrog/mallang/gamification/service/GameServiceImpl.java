@@ -47,12 +47,18 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public GameStats retrieveStatsForUser(Long userId) {
-        int score = scoreCardRepository.getTotalScoreForUser(userId);
+        Integer score = scoreCardRepository.getTotalScoreForUser(userId);
+        score = (score == null) ? 0 : score;
         List<BadgeCard> badgeCards = badgeCardRepository.findByUserIdOrderByBadgeTimestampDesc(userId);
         return new GameStats(userId, score,
                 badgeCards.stream()
                         .map(BadgeCard::getBadge)
                         .toList());
+    }
+
+    @Override
+    public ScoreCard getScoreForAttempt(final Long attemptId) {
+        return scoreCardRepository.findByAttemptId(attemptId);
     }
 
     /**
@@ -61,7 +67,8 @@ public class GameServiceImpl implements GameService {
     private List<BadgeCard> provideBadgeOnCondition(final Long userId, final Long attemptId) {
         List<BadgeCard> badgeCards = new ArrayList<>();
 
-        int totalScore = scoreCardRepository.getTotalScoreForUser(userId);
+        Integer totalScore = scoreCardRepository.getTotalScoreForUser(userId);
+        totalScore = (totalScore == null) ? 0 : totalScore;
         log.info("사용자 ID {} 의 새로운 점수 {}", userId, totalScore);
 
         List<ScoreCard> scoreCardList = scoreCardRepository.findByUserIdOrderByScoreTimestampDesc(userId);

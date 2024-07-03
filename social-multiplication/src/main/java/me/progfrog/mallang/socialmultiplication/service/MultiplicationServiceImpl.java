@@ -35,7 +35,7 @@ public class MultiplicationServiceImpl implements MultiplicationService {
 
     @Transactional
     @Override
-    public boolean checkAttempt(final MultiplicationResultAttempt attempt) {
+    public MultiplicationResultAttempt checkAttempt(final MultiplicationResultAttempt attempt) {
         // 조작된 답안을 방지
         Assert.isTrue(!attempt.isCorrect(), "채점된 상태로 보낼 수 없습니다!");
 
@@ -67,7 +67,7 @@ public class MultiplicationServiceImpl implements MultiplicationService {
                 checkedAttempt.isCorrect()
         ));
 
-        return correct;
+        return checkedAttempt;
     }
 
     @Transactional(readOnly = true)

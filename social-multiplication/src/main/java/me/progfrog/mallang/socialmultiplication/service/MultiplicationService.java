@@ -15,7 +15,7 @@ public interface MultiplicationService {
     /**
      * @return 곱셈 계산 결과가 맞으면 true, 아니면 false
      */
-    boolean checkAttempt(final MultiplicationResultAttempt resultAttempt);
+    MultiplicationResultAttempt checkAttempt(final MultiplicationResultAttempt resultAttempt);
 
     /**
      * 해당 사용자의 통계 정보를 조회
